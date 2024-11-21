@@ -1,33 +1,60 @@
-from flask import Flask, render_template_string, render_template, jsonify
-from flask import render_template
-from flask import json
-from datetime import datetime
-from urllib.request import urlopen
-import sqlite3
-app = Flask(__name__)
-@app.route('/')
-def hello_world():
-    return render_template('hello.html') #comm2
-@app.route("/contact/")
-def MaPremiereAPI():
-    return render_template("forms.html")
-@app.route('/tawarano/')
-def meteo():
-    response = urlopen('https://samples.openweathermap.org/data/2.5/forecast?lat=0&lon=0&appid=xxx')
-    raw_content = response.read()
-    json_content = json.loads(raw_content.decode('utf-8'))
-    results = []
-    for list_element in json_content.get('list', []):
-        dt_value = list_element.get('dt')
-        temp_day_value = list_element.get('main', {}).get('temp') - 273.15 # Conversion de Kelvin en °c 
-        results.append({'Jour': dt_value, 'temp': temp_day_value})
-    return jsonify(results=results)
-@app.route("/rapport/")
-def mongraphique():
-    return render_template("graphique.html")
-@app.route("/histogramme/")
-def histogramme():
-    return render_template("histogramme.html")
-if __name__ == "__main__":
-  app.run(debug=True)
-Dispose d’un menu contextuel
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Évolution des températures à Tawarano</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        // Chargement de la bibliothèque Google Charts
+        google.charts.load('current', {
+            packages: ['corechart', 'bar']
+        });
+
+        // Fonction pour dessiner le graphique
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            // Création de l'objet de données (données de température de Tawarano)
+            var data = google.visualization.arrayToDataTable([
+                ['Date', 'Température'],
+                ['01/01', 25],
+                ['02/01', 27],
+                ['03/01', 22],
+                ['04/01', 26],
+                ['05/01', 28],
+                ['06/01', 24],
+                ['07/01', 30],
+                ['08/01', 29],
+                ['09/01', 23],
+                ['10/01', 21]
+                // Ajoutez ici d'autres dates et températures si nécessaire
+            ]);
+
+            // Configuration du graphique
+            var options = {
+                title: 'Évolution des températures à Tawarano',
+                chartArea: {
+                    width: '50%'
+                },
+                hAxis: {
+                    title: 'Température (°C)',
+                    minValue: 0
+                },
+                vAxis: {
+                    title: 'Date'
+                },
+                bars: 'vertical', // Orientation verticale des barres
+            };
+
+            // Création et affichage du graphique dans le div "histogramme"
+            var chart = new google.visualization.BarChart(document.getElementById('histogramme'));
+            chart.draw(data, options);
+        }
+    </script>
+</head>
+<body>
+    <h1>Évolution des températures à Tawarano</h1>
+    <div id="histogramme" style="width: 900px; height: 500px;"></div>
+</body>
+</html>
