@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphique des Commits minute par minute</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        // Fonction pour charger les données des commits et générer le graphique
+        google.charts.load('current', {
+            packages: ['corechart', 'bar']
+        });
+
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            // Récupérer les données des commits via l'API GitHub
+            fetch('https://api.github.com/repos/Ethaly/5MCSI_Metriques/commits')
+                .then(response => response.json())
+                .then(data => {
+                    // Compter le nombre de commits par minute
+                    let commitsPerMinute = {};
+
+                    // Traiter les commits
+                    data.forEach(commit => {
+                        const commitDate = commit.commit.author.date;  // Date du commit
+                        const commitMinute = commitDate.substring(14, 16);  // Extraire la minute (14-16 caractères)
+                        
+                        // Incrémenter le compteur pour cette minute
+                        if (commitsPerMinute[commitMinute]) {
+                            commitsPerMinute[commitMinute]++;
+                        } else {
+                            commitsPerMinute[commitMinute] = 1;
+                        }
+                    });
+
+                    // Préparer les données pour le graphique
+                    let chartData = [['Minute', 'Commits']];
+                    for (let minute in commitsPerMinute) {
+                        chartData.push([minute, commitsPerMinute[minute]]);
+                    }
+
+                    // Convertir les données en format compatible avec Google Charts
+                    var data = google.visualization.arrayToDataTable(chartData);
+
+                    // Options du graphique
+                    var options = {
+                        title: 'Nombre de Commits par Minute',
+                        chartArea: { width: '50%' },
+                        hAxis: {
+                            title: 'Minute',
+                            minValue: 0
+                        },
+                        vAxis: {
+                            title: 'Nombre de Commits'
+                        }
+                    };
+
+                    // Créer le graphique à colonnes
+                    var chart = new google.visualization.BarChart(document.getElementById('commitsChart'));
+                    chart.draw(data, options);
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la récupération des données des commits : ', error);
+                });
+        }
+    </script>
+</head>
+<body>
+    <h1>Activité des Commits minute par minute</h1>
+    <p>Graphique représentant l'activité des commits dans le dépôt GitHub, minute par minute.</p>
+
+    <!-- Div pour afficher le graphique -->
+    <div id="commitsChart" style="width: 900px; height: 500px;"></div>
+</body>
+</html>
